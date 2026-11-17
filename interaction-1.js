@@ -76,7 +76,7 @@ function playAudio() {
   dspNode.setParamValue("/djembe/gate", 1);
   setTimeout(() => {
     dspNode.setParamValue("/djembe/gate", 0);
-  }, 100);
+  }, 300);
 }
 
 //==========================================================================================
