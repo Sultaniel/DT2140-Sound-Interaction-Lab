@@ -15,6 +15,8 @@ const motorGateAddress = "/smash/gate";
 const tubeResAddress = "/smash/tubeRes";
 const rotationXMin = 30;
 const rotationXMax = 80;
+const rotationZMin = 60;
+const rotationZMax = 100;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -51,14 +53,20 @@ smash
 function accelerationChange(accx, accy, accz) {}
 
 function rotationChange(rotx, roty, rotz) {
-  if (!dspNode || audioContext.state !== "running" || !Number.isFinite(rotx)) {
+  if (!dspNode || audioContext.state !== "running") {
     return;
   }
 
-  const maxSpeed = Math.max(
-    0,
-    Math.min(1, (rotx - rotationXMin) / (rotationXMax - rotationXMin))
-  );
+  const isInAllowedOrientation =
+    Number.isFinite(rotx) &&
+    Number.isFinite(roty) &&
+    Number.isFinite(rotz) &&
+    roty < 0 &&
+    rotz >= rotationZMin &&
+    rotz <= rotationZMax;
+  const maxSpeed = isInAllowedOrientation
+    ? Math.max(0, Math.min(1, (rotx - rotationXMin) / (rotationXMax - rotationXMin)))
+    : 0;
   dspNode.setParamValue(maxSpeedAddress, maxSpeed);
 }
 
@@ -85,7 +93,7 @@ function deviceShaken() {
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// X rotation from 44 to 300 degrees maps maxSpeed from 0 to 1.
+// X rotation controls maxSpeed only when Y rotation is negative and Z rotation is 60..100.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
