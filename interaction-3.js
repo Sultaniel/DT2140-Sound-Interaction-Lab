@@ -10,7 +10,7 @@
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
-let fireOn = 1;
+let fireOn = true;
 
 // Change here to ("tuono") depending on your wasm file name
 const dspName = "fire";
@@ -106,7 +106,8 @@ function playAudio(fire) {
     }
     console.log(fire)
     dspNode.setParamValue(gateAddress, fire)
-    fireOn = fireOn == 0 ? 1 : 0
+    fireOn = fireOn
+    setTimeout(() => {dspNode.setParamValue(gateAddress, false)}, 100)
 }
 
 //==========================================================================================
