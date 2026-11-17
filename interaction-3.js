@@ -56,8 +56,6 @@ function accelerationChange(accx, accy, accz) {
 function rotationChange(rotx, roty, rotz) {}
 
 function mousePressed() {
-  playAudio(mouseX);
-  // Use this for debugging from the desktop!
 }
 
 function deviceMoved() {
@@ -99,8 +97,9 @@ function playAudio() {
   if (audioContext.state === "suspended") {
     return;
   }
+
   console.log(bubble);
-  dspNode.setParamValue("/bubble/drop", mouseX);
+  dspNode.setParamValue("/bubble/drop", 1);
 }
 
 //==========================================================================================
