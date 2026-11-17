@@ -17,12 +17,12 @@ const instance = new FaustWasm2ScriptProcessor(dspName);
 const doorPositionAddress = "/door/door/position";
 const doorVolumeAddress = "/door/volume";
 const doorPositionMax = 0.5;
-const accelerationXMin = -9.81;
-const accelerationXMax = 9.81;
-const accelerationXDeadband = 0.15;
+const rotationYMin = -90;
+const rotationYMax = 90;
+const rotationYDeadband = 0.5;
 const movementReleaseDelay = 250;
 const doorSoundVolume = 0.7;
-let lastAccelerationX = null;
+let lastRotationY = null;
 let doorSilenceTimeout = null;
 
 // output to window or npm package module
@@ -55,32 +55,31 @@ door
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Map horizontal phone acceleration to the door position control.
+// Map rotation around the phone's Y axis to the door position control.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
 
-function accelerationChange(accx, accy, accz) {
+function accelerationChange(accx, accy, accz) {}
+
+function rotationChange(rotx, roty, rotz) {
   if (!dspNode || audioContext.state !== "running") {
     return;
   }
 
-  if (lastAccelerationX === null) {
-    lastAccelerationX = accx;
+  if (lastRotationY === null) {
+    lastRotationY = roty;
     return;
   }
 
-  if (Math.abs(accx - lastAccelerationX) < accelerationXDeadband) {
+  if (Math.abs(roty - lastRotationY) < rotationYDeadband) {
     return;
   }
 
-  lastAccelerationX = accx;
+  lastRotationY = roty;
   const normalized = Math.max(
     0,
-    Math.min(
-      1,
-      (accx - accelerationXMin) / (accelerationXMax - accelerationXMin)
-    )
+    Math.min(1, (roty - rotationYMin) / (rotationYMax - rotationYMin))
   );
   dspNode.setParamValue(doorPositionAddress, normalized * doorPositionMax);
   dspNode.setParamValue(doorVolumeAddress, doorSoundVolume);
@@ -92,14 +91,12 @@ function accelerationChange(accx, accy, accz) {
   }, movementReleaseDelay);
 }
 
-function rotationChange(rotx, roty, rotz) {}
-
 function mousePressed() {
   console.log("Mouse pressed", {
     dspReady: !!dspNode,
     audioState: audioContext.state,
   });
-  accelerationChange(accelerationX, accelerationY, accelerationZ);
+  rotationChange(rotationX, rotationY, rotationZ);
   // Use this for debugging from the desktop!
 }
 
@@ -129,7 +126,7 @@ function getMinMaxParam(address) {
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// accelerationX maps from approximately -1g..1g to the door's 0..0.5 range.
+// rotationY maps from -90..90 degrees to the door's 0..0.5 range.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
