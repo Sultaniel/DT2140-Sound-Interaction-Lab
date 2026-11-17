@@ -12,10 +12,18 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "bubble";
+const dspName = "door";
 const instance = new FaustWasm2ScriptProcessor(dspName);
-const bubbleDropAddress = "/bubble/drop";
-const bubbleVolumeAddress = "/bubble/bubble/volume";
+const doorPositionAddress = "/door/door/position";
+const doorVolumeAddress = "/door/volume";
+const doorPositionMax = 0.5;
+const accelerationXMin = -9.81;
+const accelerationXMax = 9.81;
+const accelerationXDeadband = 0.15;
+const movementReleaseDelay = 250;
+const doorSoundVolume = 0.7;
+let lastAccelerationX = null;
+let doorSilenceTimeout = null;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -27,7 +35,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-bubble
+door
   .createDSP(audioContext, 1024)
   .then((node) => {
     dspNode = node;
@@ -36,10 +44,10 @@ bubble
     const jsonString = dspNode.getJSON();
     jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
     dspNodeParams = jsonParams;
-    dspNode.setParamValue(bubbleVolumeAddress, 0.7);
+    dspNode.setParamValue(doorVolumeAddress, 0);
   })
   .catch((error) => {
-    console.error("Failed to load the bubble DSP:", error);
+    console.error("Failed to load the door DSP:", error);
   });
 
 //==========================================================================================
@@ -47,13 +55,42 @@ bubble
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Edit the next functions to create interactions
-// Decide which parameters you're using and then use playAudio to play the Audio
+// Map horizontal phone acceleration to the door position control.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
 
-function accelerationChange(accx, accy, accz) {}
+function accelerationChange(accx, accy, accz) {
+  if (!dspNode || audioContext.state !== "running") {
+    return;
+  }
+
+  if (lastAccelerationX === null) {
+    lastAccelerationX = accx;
+    return;
+  }
+
+  if (Math.abs(accx - lastAccelerationX) < accelerationXDeadband) {
+    return;
+  }
+
+  lastAccelerationX = accx;
+  const normalized = Math.max(
+    0,
+    Math.min(
+      1,
+      (accx - accelerationXMin) / (accelerationXMax - accelerationXMin)
+    )
+  );
+  dspNode.setParamValue(doorPositionAddress, normalized * doorPositionMax);
+  dspNode.setParamValue(doorVolumeAddress, doorSoundVolume);
+
+  clearTimeout(doorSilenceTimeout);
+  doorSilenceTimeout = setTimeout(() => {
+    dspNode.setParamValue(doorVolumeAddress, 0);
+    doorSilenceTimeout = null;
+  }, movementReleaseDelay);
+}
 
 function rotationChange(rotx, roty, rotz) {}
 
@@ -62,7 +99,7 @@ function mousePressed() {
     dspReady: !!dspNode,
     audioState: audioContext.state,
   });
-  playAudio();
+  accelerationChange(accelerationX, accelerationY, accelerationZ);
   // Use this for debugging from the desktop!
 }
 
@@ -77,7 +114,6 @@ function deviceTurned() {
 function deviceShaken() {
   shaketimer = millis();
   statusLabels[0].style("color", "pink");
-  playAudio();
 }
 
 function getMinMaxParam(address) {
@@ -89,27 +125,14 @@ function getMinMaxParam(address) {
 }
 
 //==========================================================================================
-// AUDIO INTERACTION
+// DOOR POSITION
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Edit here to define your audio controls
+// accelerationX maps from approximately -1g..1g to the door's 0..0.5 range.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
-
-function playAudio() {
-    if (!dspNode) {
-        return;
-    }
-    if (audioContext.state === 'suspended') {
-        return;
-    }
-    dspNode.setParamValue(bubbleDropAddress, 1);
-    setTimeout(() => {
-      dspNode.setParamValue(bubbleDropAddress, 0);
-    }, 100);
-}
 
 //==========================================================================================
 // END
