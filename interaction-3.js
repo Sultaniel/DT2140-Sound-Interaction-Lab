@@ -100,6 +100,7 @@ function playAudio() {
 
   console.log(bubble);
   dspNode.setParamValue("/bubble/drop", 1);
+  setTimeout(() => {dspNode.setParamValue("/bubble/drop", 0)}, 100)
 }
 
 //==========================================================================================
