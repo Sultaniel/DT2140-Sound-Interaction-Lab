@@ -13,6 +13,7 @@ const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 const maxSpeedAddress = "/smash/maxSpeed";
 const motorGateAddress = "/smash/gate";
+const tubeResAddress = "/smash/tubeRes";
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -40,7 +41,7 @@ smash.createDSP(audioContext, 1024)
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Map Z-axis rotation to the engine's maximum speed.
+// Map Z-axis rotation to maximum speed and X-axis rotation to tube resonance.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
@@ -50,12 +51,20 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-    if (!dspNode || audioContext.state !== "running" || !Number.isFinite(rotz)) {
+    if (
+        !dspNode ||
+        audioContext.state !== "running" ||
+        !Number.isFinite(rotx) ||
+        !Number.isFinite(rotz)
+    ) {
         return;
     }
 
     const maxSpeed = Math.max(0, Math.min(1, (rotz - 35) / (200 - 35)));
     dspNode.setParamValue(maxSpeedAddress, maxSpeed);
+
+    const tubeRes = Math.max(0, Math.min(1, (rotx - 3) / (85 - 3)));
+    dspNode.setParamValue(tubeResAddress, tubeRes);
 }
 
 function mousePressed() {
@@ -81,7 +90,8 @@ function deviceShaken() {
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// maxSpeed maps from 0 to 1 as Z rotation moves from 35 to 200 degrees.
+// Z rotation maps 35..200 degrees to maxSpeed 0..1.
+// X rotation maps 3..85 degrees to tubeRes 0..1.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================

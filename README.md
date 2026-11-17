@@ -30,6 +30,10 @@ By the end of this lab, you will be able to:
    git clone <URL-of-your-fork>
    ```
 4. **Generate the WebAssembly (WASM)** file using [Faust IDE](https://faustide.grame.fr). You can see how to do it at [this link](https://docs.google.com/presentation/d/1lj7QYG4uRv8_6EkK9RaNHyYJWr_GaDGgUtBmQcBSjCM/edit?usp=sharing)
+
+
+node scripts/faust2wasm.js test/mono.dsp test/out
+
 5. **Enable GitHub Pages** on your forked repository to host your project. You can see how to do it at [this link](https://docs.google.com/presentation/d/16rdCUduoiX9MKvGQ_ZED4n1LxoCYvBTOSD802oZfJe8/edit?usp=sharing)
 
 ---
