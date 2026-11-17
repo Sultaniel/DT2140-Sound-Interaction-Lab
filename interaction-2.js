@@ -12,8 +12,8 @@ const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 const maxSpeedAddress = "/smash/maxSpeed";
 const motorGateAddress = "/smash/gate";
-const rotationZMin = 44;
-const rotationZMax = 300;
+const rotationXMin = 30;
+const rotationXMax = 80;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -41,7 +41,7 @@ smash
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Map Z-axis rotation to the engine's maximum speed.
+// Map X-axis rotation to the engine's maximum speed.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
@@ -49,13 +49,13 @@ smash
 function accelerationChange(accx, accy, accz) {}
 
 function rotationChange(rotx, roty, rotz) {
-  if (!dspNode || audioContext.state !== "running" || !Number.isFinite(rotz)) {
+  if (!dspNode || audioContext.state !== "running" || !Number.isFinite(rotx)) {
     return;
   }
 
   const maxSpeed = Math.max(
     0,
-    Math.min(1, (rotz - rotationZMin) / (rotationZMax - rotationZMin))
+    Math.min(1, (rotx - rotationXMin) / (rotationXMax - rotationXMin))
   );
   dspNode.setParamValue(maxSpeedAddress, maxSpeed);
 }
@@ -83,7 +83,7 @@ function deviceShaken() {
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Z rotation from 44 to 300 degrees maps maxSpeed from 0 to 1.
+// X rotation from 44 to 300 degrees maps maxSpeed from 0 to 1.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
