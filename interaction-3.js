@@ -10,12 +10,10 @@
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
-let fireOn = true;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "fire";
+const dspName = "bubble";
 const instance = new FaustWasm2ScriptProcessor(dspName);
-const gateAddress = "/fire/gate"
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -27,7 +25,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-fire.createDSP(audioContext, 1024)
+bubble.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -76,7 +74,7 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio(fireOn);
+    playAudio();
 }
 
 function getMinMaxParam(address) {
@@ -97,17 +95,15 @@ function getMinMaxParam(address) {
 //
 //==========================================================================================
 
-function playAudio(fire) {
+function playAudio() {
     if (!dspNode) {
         return;
     }
     if (audioContext.state === 'suspended') {
         return;
     }
-    console.log(fire)
-    dspNode.setParamValue(gateAddress, fire)
-    fireOn = fireOn
-    setTimeout(() => {dspNode.setParamValue(gateAddress, false)}, 100)
+    console.log(bubble)
+    dspNode.setParamValue("/bubble/drop", 1)
 }
 
 //==========================================================================================
