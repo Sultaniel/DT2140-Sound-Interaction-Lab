@@ -14,6 +14,7 @@ let jsonParams = null;
 // Change here to ("tuono") depending on your wasm file name
 const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
+const threshold = 100;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
