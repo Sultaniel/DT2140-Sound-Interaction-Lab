@@ -8,10 +8,10 @@
 //
 //==========================================================================================
 let dspNode = null;
-const dspName = "door";
+const dspName = "doorSlide";
 const instance = new FaustWasm2ScriptProcessor(dspName);
-const doorPositionAddress = "/door/door/position";
-const doorVolumeAddress = "/door/volume";
+const doorPositionAddress = "/doorSlide/door/position";
+const doorVolumeAddress = "/doorSlide/volume";
 const doorPositionMax = 0.5;
 const rotationYMin = -90;
 const rotationYMax = 90;
@@ -27,7 +27,7 @@ if (typeof module === "undefined") {
   module.exports = exp;
 }
 
-door.createDSP(audioContext, 1024)
+doorSlide.createDSP(audioContext, 1024)
   .then((node) => {
     dspNode = node;
     dspNode.connect(audioContext.destination);
