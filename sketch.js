@@ -31,23 +31,17 @@ let turntimer = 0;
 // AUDIO
 //==========================================================================================
 
-async function contextAudioStart() {
-  try {
-    if (audioContext.state === 'suspended') {
-      const sensorPermission = setMotionListeners().catch((error) => {
-        console.error('Could not access phone sensors:', error);
-        return false;
-      });
-      const resumePromise = audioContext.resume();
-      await resumePromise;
-      await sensorPermission;
-      buttons[0].html('Turn Off DSP');
-    } else {
-      await audioContext.suspend();
-      buttons[0].html('Turn On DSP');
-    }
-  } catch (error) {
-    console.error('Could not change audio state:', error);
+function contextAudioStart() {
+  if (!dspNode) {
+    return;
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+    // startDsp();
+    buttons[0].html('Turn Off DSP');
+    setMotionListeners()
+  } else {
+    audioContext.suspend();
     buttons[0].html('Turn On DSP');
   }
 }
@@ -60,6 +54,8 @@ async function contextAudioStart() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+
+  setMotionListeners();
 
   let valBox = createDiv();
   valBox.id("valuelabels");
