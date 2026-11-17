@@ -110,6 +110,7 @@ function playAudio(maxSpeed) {
     return;
   }
   dspNode.setParamValue("/smash/maxSpeed", maxSpeed);
+  dspNode.setParamValue("/smash/tubeRes", 0);
   setTimeout(() => {
     dspNode.setParamValue("/smash/gate", 1);
   }, 100);
