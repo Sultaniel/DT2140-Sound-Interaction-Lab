@@ -55,7 +55,7 @@ function accelerationChange(accx, accy, accz) {
 
 function rotationChange(rotx, roty, rotz) {
   if (rotx < 80 || rotx > 110) {
-    dspNode.setParamValue("/smash/gate", 0);
+    //dspNode.setParamValue("/smash/gate", 0);
     return;
   }
 

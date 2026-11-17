@@ -11,7 +11,6 @@ let dspNode = null;
 const dspName = "door";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
-
 // output to window or npm package module
 if (typeof module === "undefined") {
   window[dspName] = instance;
@@ -21,11 +20,11 @@ if (typeof module === "undefined") {
   module.exports = exp;
 }
 
-door.createDSP(audioContext, 1024)
+door
+  .createDSP(audioContext, 1024)
   .then((node) => {
     dspNode = node;
     dspNode.connect(audioContext.destination);
-    dspNode.setParamValue(doorVolumeAddress, 0);
     console.log("Door DSP params:", dspNode.getParams());
   })
   .catch((error) => {
@@ -43,13 +42,12 @@ door.createDSP(audioContext, 1024)
 
 function accelerationChange(accx, accy, accz) {}
 
-function rotationChange(rotx, roty, rotz) {
-  
-}
+function rotationChange(rotx, roty, rotz) {}
 
 function deviceMoved() {
   movetimer = millis();
   statusLabels[2].style("color", "pink");
+  playAudio();
 }
 
 function deviceTurned() {
@@ -69,7 +67,7 @@ function playAudio(maxSpeed) {
   }
   dspNode.setParamValue("/door/position", 1);
   setTimeout(() => {
-    dspNode.setParamValue("/door/position", 1);
+    dspNode.setParamValue("/door/position", 0);
   }, 100);
 }
 
