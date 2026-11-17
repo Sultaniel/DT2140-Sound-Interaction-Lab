@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "flare";
+const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,7 +25,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-flare.createDSP(audioContext, 1024).then((node) => {
+smash.createDSP(audioContext, 1024).then((node) => {
   dspNode = node;
   dspNode.connect(audioContext.destination);
   console.log("params: ", dspNode.getParams());
@@ -63,7 +63,7 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-   playAudio(.5)
+  //playAudio(0.5);
   // Use this for debugging from the desktop!
 }
 
@@ -106,10 +106,10 @@ function playAudio(maxSpeed) {
   if (audioContext.state === "suspended") {
     return;
   }
-  dspNode.setParamValue("/flare/gate", 1);
-  dspNode.setParamValue("/flare/maxSpeed", maxSpeed);
+  dspNode.setParamValue("/smash/gate", 1);
+  dspNode.setParamValue("/smash/maxSpeed", maxSpeed);
   setTimeout(() => {
-    dspNode.setParamValue("/flare/gate", 1);
+    dspNode.setParamValue("/smash/gate", 1);
   }, 100);
 }
 
