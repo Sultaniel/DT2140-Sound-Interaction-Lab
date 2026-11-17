@@ -106,7 +106,7 @@ function playAudio(fire) {
     }
     console.log(fire)
     dspNode.setParamValue(gateAddress, fire)
-    fireOn = !fireOn
+    fireOn = fireOn == 0 ? 1 : 0
 }
 
 //==========================================================================================
