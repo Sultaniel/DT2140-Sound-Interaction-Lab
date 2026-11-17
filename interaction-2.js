@@ -14,7 +14,7 @@ let jsonParams = null;
 // Change here to ("tuono") depending on your wasm file name
 const dspName = "flare";
 const instance = new FaustWasm2ScriptProcessor(dspName);
-const maxSpeedAddress = "/smash/maxSpeed";
+const maxSpeedAddress = "/flare/maxSpeed";
 const rotationXMin = 80;
 const rotationXMax = 90;
 
