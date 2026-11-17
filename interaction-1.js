@@ -16,7 +16,10 @@ const doorPositionMax = 0.5;
 const rotationYMin = -90;
 const rotationYMax = 90;
 const rotationYDeadband = 0.5;
+const activeVolume = 0.7;
+const stillnessDelay = 300;
 let lastRotationY = null;
+let stillnessTimeout = null;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -31,7 +34,7 @@ doorSlide.createDSP(audioContext, 1024)
   .then((node) => {
     dspNode = node;
     dspNode.connect(audioContext.destination);
-    dspNode.setParamValue(doorVolumeAddress, 0.7);
+    dspNode.setParamValue(doorVolumeAddress, 0);
     console.log("Door DSP params:", dspNode.getParams());
   })
   .catch((error) => {
@@ -70,6 +73,13 @@ function rotationChange(rotx, roty, rotz) {
     Math.min(1, (roty - rotationYMin) / (rotationYMax - rotationYMin))
   );
   dspNode.setParamValue(doorPositionAddress, normalized * doorPositionMax);
+  dspNode.setParamValue(doorVolumeAddress, activeVolume);
+
+  clearTimeout(stillnessTimeout);
+  stillnessTimeout = setTimeout(() => {
+    dspNode.setParamValue(doorVolumeAddress, 0);
+    stillnessTimeout = null;
+  }, stillnessDelay);
 }
 
 function deviceMoved() {

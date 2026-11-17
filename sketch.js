@@ -31,17 +31,19 @@ let turntimer = 0;
 // AUDIO
 //==========================================================================================
 
-function contextAudioStart() {
-  if (!dspNode) {
-    return;
-  }
-  if (audioContext.state === 'suspended') {
-    audioContext.resume();
-    // startDsp();
-    buttons[0].html('Turn Off DSP');
-    setMotionListeners()
-  } else {
-    audioContext.suspend();
+async function contextAudioStart() {
+  try {
+    if (audioContext.state === 'suspended') {
+      const resumePromise = audioContext.resume();
+      setMotionListeners();
+      await resumePromise;
+      buttons[0].html('Turn Off DSP');
+    } else {
+      await audioContext.suspend();
+      buttons[0].html('Turn On DSP');
+    }
+  } catch (error) {
+    console.error('Could not change audio state:', error);
     buttons[0].html('Turn On DSP');
   }
 }
@@ -54,8 +56,6 @@ function contextAudioStart() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-
-  setMotionListeners();
 
   let valBox = createDiv();
   valBox.id("valuelabels");
