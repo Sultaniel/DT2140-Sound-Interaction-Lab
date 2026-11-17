@@ -11,11 +11,14 @@ let dspNode = null;
 
 const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
-const maxSpeedAddress = "/smash/maxSpeed";
 const motorGateAddress = "/smash/gate";
 const tubeResAddress = "/smash/tubeRes";
-const SLAP_THRESHOLD = 15;
-let prevMag = 0;
+const ROTATION_THRESHOLD = 1.5;
+const NEUTRAL_ROTATION_LIMIT = 20;
+const SLAP_COOLDOWN = 200;
+const SLAP_DURATION = 100;
+let previousRotationX = null;
+let previousRotationZ = null;
 let lastSlap = 0;
 
 // output to window or npm package module
@@ -33,7 +36,8 @@ smash
     dspNode = node;
     dspNode.connect(audioContext.destination);
     console.log("params: ", dspNode.getParams());
-    dspNode.setParamValue(motorGateAddress, 1);
+    dspNode.setParamValue(motorGateAddress, 0);
+    dspNode.setParamValue(tubeResAddress, 0);
   })
   .catch((error) => {
     console.error("Failed to load the smash DSP:", error);
@@ -44,31 +48,55 @@ smash
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Map Z-axis rotation to maximum speed and X-axis rotation to tube resonance.
+// Trigger a slap with X or Z rotation near the neutral position.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
 
 function accelerationChange(accx, accy, accz) {
-  if (!dspNode || audioContext.state !== "running") return;
-
-  const mag = Math.hypot(accx, accy, accz);
-  const jump = Math.abs(mag - prevMag); // sudden change = impact
-  prevMag = mag;
-
-  if (jump > SLAP_THRESHOLD && millis() - lastSlap > 200) {
-    lastSlap = millis();
-    dspNode.setParamValue(maxSpeedAddress, mapRange(jump, SLAP_THRESHOLD, 40));
-    dspNode.setParamValue(motorGateAddress, 1);
-    setTimeout(() => dspNode.setParamValue(motorGateAddress, 0), 100);
-  }
 }
 
 function rotationChange(rotx, roty, rotz) {
-  if (!dspNode || audioContext.state !== "running" || !Number.isFinite(rotx))
+  if (!Number.isFinite(rotx) || !Number.isFinite(rotz)) return;
+
+  if (previousRotationX === null || previousRotationZ === null) {
+    previousRotationX = rotx;
+    previousRotationZ = rotz;
     return;
-  // slight increase only: output limited to 0 - 0.3
-  dspNode.setParamValue(tubeResAddress, mapRange(rotx, 3, 85, 0, 0.3));  
+  }
+
+  const changeX = Math.abs(rotx - previousRotationX);
+  const changeZ = Math.abs(rotz - previousRotationZ);
+  previousRotationX = rotx;
+  previousRotationZ = rotz;
+
+  if (
+    !dspNode ||
+    audioContext.state !== "running" ||
+    millis() - lastSlap < SLAP_COOLDOWN
+  ) {
+    return;
+  }
+
+  const xCanTrigger =
+    changeX >= ROTATION_THRESHOLD &&
+    Math.abs(rotx) < NEUTRAL_ROTATION_LIMIT;
+  const zCanTrigger =
+    changeZ >= ROTATION_THRESHOLD &&
+    Math.abs(rotz) < NEUTRAL_ROTATION_LIMIT;
+
+  if (!xCanTrigger && !zCanTrigger) return;
+
+  const triggerAngle =
+    xCanTrigger && (!zCanTrigger || changeX >= changeZ) ? rotx : rotz;
+  lastSlap = millis();
+  dspNode.setParamValue(tubeResAddress, Math.abs(triggerAngle) / NEUTRAL_ROTATION_LIMIT);
+  dspNode.setParamValue(motorGateAddress, 1);
+
+  setTimeout(() => {
+    dspNode.setParamValue(motorGateAddress, 0);
+    dspNode.setParamValue(tubeResAddress, 0);
+  }, SLAP_DURATION);
 }
 
 function mousePressed() {
@@ -94,8 +122,8 @@ function deviceShaken() {
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Z rotation maps 35..200 degrees to maxSpeed 0..1.
-// X rotation maps 3..85 degrees to tubeRes 0..1.
+// X or Z rotation changes trigger a slap only within 20 degrees of neutral.
+// tubeRes follows the triggering axis angle during the slap and resets to zero.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
