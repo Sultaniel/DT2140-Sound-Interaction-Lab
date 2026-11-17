@@ -55,6 +55,7 @@ function accelerationChange(accx, accy, accz) {
 
 function rotationChange(rotx, roty, rotz) {
   if (rotx < 80 || rotx > 110) {
+    dspNode.setParamValue("/smash/gate", 0);
     return;
   }
 
@@ -107,6 +108,10 @@ function playAudio(maxSpeed) {
     return;
   }
   dspNode.setParamValue("/smash/gate", 1);
+  dspNode.setParamValue("/smash/rotorLevel", 0);
+  dspNode.setParamValue("/smash/runtime", 0);
+  dspNode.setParamValue("/smash/statorLevel", 0);
+  dspNode.setParamValue("/smash/tubeRes", 0);
   dspNode.setParamValue("/smash/maxSpeed", maxSpeed);
   setTimeout(() => {
     dspNode.setParamValue("/smash/gate", 1);
