@@ -8,10 +8,6 @@
 //
 //==========================================================================================
 let dspNode = null;
-let dspNodeParams = null;
-let jsonParams = null;
-
-// Change here to ("tuono") depending on your wasm file name
 const dspName = "door";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 const doorPositionAddress = "/door/door/position";
@@ -20,10 +16,9 @@ const doorPositionMax = 0.5;
 const rotationYMin = -90;
 const rotationYMax = 90;
 const rotationYDeadband = 0.5;
-const movementReleaseDelay = 250;
-const doorSoundVolume = 0.7;
+const silenceDelay = 250;
 let lastRotationY = null;
-let doorSilenceTimeout = null;
+let silenceTimeout = null;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -34,17 +29,12 @@ if (typeof module === "undefined") {
   module.exports = exp;
 }
 
-// The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-door
-  .createDSP(audioContext, 1024)
+door.createDSP(audioContext, 1024)
   .then((node) => {
     dspNode = node;
     dspNode.connect(audioContext.destination);
-    console.log("params: ", dspNode.getParams());
-    const jsonString = dspNode.getJSON();
-    jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
-    dspNodeParams = jsonParams;
     dspNode.setParamValue(doorVolumeAddress, 0);
+    console.log("Door DSP params:", dspNode.getParams());
   })
   .catch((error) => {
     console.error("Failed to load the door DSP:", error);
@@ -55,7 +45,7 @@ door
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Map rotation around the phone's Y axis to the door position control.
+// Trigger the door sound only when Y rotation changes.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
@@ -63,7 +53,7 @@ door
 function accelerationChange(accx, accy, accz) {}
 
 function rotationChange(rotx, roty, rotz) {
-  if (!dspNode || audioContext.state !== "running") {
+  if (!dspNode || audioContext.state !== "running" || !Number.isFinite(roty)) {
     return;
   }
 
@@ -82,22 +72,13 @@ function rotationChange(rotx, roty, rotz) {
     Math.min(1, (roty - rotationYMin) / (rotationYMax - rotationYMin))
   );
   dspNode.setParamValue(doorPositionAddress, normalized * doorPositionMax);
-  dspNode.setParamValue(doorVolumeAddress, doorSoundVolume);
+  dspNode.setParamValue(doorVolumeAddress, 0.7);
 
-  clearTimeout(doorSilenceTimeout);
-  doorSilenceTimeout = setTimeout(() => {
+  clearTimeout(silenceTimeout);
+  silenceTimeout = setTimeout(() => {
     dspNode.setParamValue(doorVolumeAddress, 0);
-    doorSilenceTimeout = null;
-  }, movementReleaseDelay);
-}
-
-function mousePressed() {
-  console.log("Mouse pressed", {
-    dspReady: !!dspNode,
-    audioState: audioContext.state,
-  });
-  rotationChange(rotationX, rotationY, rotationZ);
-  // Use this for debugging from the desktop!
+    silenceTimeout = null;
+  }, silenceDelay);
 }
 
 function deviceMoved() {
@@ -112,24 +93,6 @@ function deviceShaken() {
   shaketimer = millis();
   statusLabels[0].style("color", "pink");
 }
-
-function getMinMaxParam(address) {
-  const exampleMinMaxParam = findByAddress(dspNodeParams, address);
-  // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
-  const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
-  console.log("Min value:", exampleMinValue, "Max value:", exampleMaxValue);
-  return [exampleMinValue, exampleMaxValue];
-}
-
-//==========================================================================================
-// DOOR POSITION
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// rotationY maps from -90..90 degrees to the door's 0..0.5 range.
-//------------------------------------------------------------------------------------------
-//
-//==========================================================================================
 
 //==========================================================================================
 // END
