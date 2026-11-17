@@ -34,9 +34,13 @@ let turntimer = 0;
 async function contextAudioStart() {
   try {
     if (audioContext.state === 'suspended') {
+      const sensorPermission = setMotionListeners().catch((error) => {
+        console.error('Could not access phone sensors:', error);
+        return false;
+      });
       const resumePromise = audioContext.resume();
-      setMotionListeners();
       await resumePromise;
+      await sensorPermission;
       buttons[0].html('Turn Off DSP');
     } else {
       await audioContext.suspend();

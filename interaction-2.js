@@ -8,7 +8,6 @@
 //
 //==========================================================================================
 let dspNode = null;
-
 const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 const motorGateAddress = "/smash/gate";
