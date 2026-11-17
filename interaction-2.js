@@ -68,9 +68,7 @@ function rotationChange(rotx, roty, rotz) {
   if (!dspNode || audioContext.state !== "running" || !Number.isFinite(rotx))
     return;
   // slight increase only: output limited to 0 - 0.3
-  dspNode.setParamValue(tubeResAddress, mapRange(rotx, 3, 85, 0, 0.3));
-  dspNode.setParamValue(tubeResAddress, mapRange(rotz, 3, 85, 0, 0.3));
-  
+  dspNode.setParamValue(tubeResAddress, mapRange(rotx, 3, 85, 0, 0.3));  
 }
 
 function mousePressed() {
