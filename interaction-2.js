@@ -12,6 +12,7 @@ const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 const maxSpeedAddress = "/smash/maxSpeed";
 const motorGateAddress = "/smash/gate";
+const tubeResAddress = "/smash/tubeRes";
 const rotationXMin = 30;
 const rotationXMax = 80;
 
@@ -31,6 +32,7 @@ smash
     dspNode.connect(audioContext.destination);
     console.log("params: ", dspNode.getParams());
     dspNode.setParamValue(motorGateAddress, 1);
+    dspNode.setParamValue(tubeResAddress, 0);
   })
   .catch((error) => {
     console.error("Failed to load the smash DSP:", error);
