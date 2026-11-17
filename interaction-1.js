@@ -8,7 +8,7 @@
 //
 //==========================================================================================
 let dspNode = null;
-const dspName = "door";
+const dspName = "djembe";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -20,7 +20,7 @@ if (typeof module === "undefined") {
   module.exports = exp;
 }
 
-door
+djembe
   .createDSP(audioContext, 1024)
   .then((node) => {
     dspNode = node;
@@ -40,14 +40,22 @@ door
 //
 //==========================================================================================
 
-function accelerationChange(accx, accy, accz) {}
+function accelerationChange(accx, accy, accz) {
+    if(accy > 2) {
+        playAudio();
+    }
+}
 
 function rotationChange(rotx, roty, rotz) {}
 
 function deviceMoved() {
   movetimer = millis();
   statusLabels[2].style("color", "pink");
-  playAudio();
+  //playAudio();
+}
+function mousePressed() {
+  //playAudio();
+  // Use this for debugging from the desktop!
 }
 
 function deviceTurned() {
@@ -58,16 +66,16 @@ function deviceShaken() {
   statusLabels[0].style("color", "pink");
 }
 
-function playAudio(maxSpeed) {
+function playAudio() {
   if (!dspNode) {
     return;
   }
   if (audioContext.state === "suspended") {
     return;
   }
-  dspNode.setParamValue("/door/position", 1);
+  dspNode.setParamValue("/djembe/gate", 1);
   setTimeout(() => {
-    dspNode.setParamValue("/door/position", 0);
+    dspNode.setParamValue("/djembe/gate", 0);
   }, 100);
 }
 
