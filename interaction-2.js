@@ -10,15 +10,10 @@
 let dspNode = null;
 const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
+const maxSpeedAddress = "/smash/maxSpeed";
 const motorGateAddress = "/smash/gate";
-const tubeResAddress = "/smash/tubeRes";
-const ROTATION_THRESHOLD = 1.5;
-const NEUTRAL_ROTATION_LIMIT = 20;
-const SLAP_COOLDOWN = 200;
-const SLAP_DURATION = 100;
-let previousRotationX = null;
-let previousRotationZ = null;
-let lastSlap = 0;
+const rotationZMin = 44;
+const rotationZMax = 300;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -35,8 +30,7 @@ smash
     dspNode = node;
     dspNode.connect(audioContext.destination);
     console.log("params: ", dspNode.getParams());
-    dspNode.setParamValue(motorGateAddress, 0);
-    dspNode.setParamValue(tubeResAddress, 0);
+    dspNode.setParamValue(motorGateAddress, 1);
   })
   .catch((error) => {
     console.error("Failed to load the smash DSP:", error);
@@ -47,55 +41,23 @@ smash
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Trigger a slap with X or Z rotation near the neutral position.
+// Map Z-axis rotation to the engine's maximum speed.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
 
-function accelerationChange(accx, accy, accz) {
-}
+function accelerationChange(accx, accy, accz) {}
 
 function rotationChange(rotx, roty, rotz) {
-  if (!Number.isFinite(rotx) || !Number.isFinite(rotz)) return;
-
-  if (previousRotationX === null || previousRotationZ === null) {
-    previousRotationX = rotx;
-    previousRotationZ = rotz;
+  if (!dspNode || audioContext.state !== "running" || !Number.isFinite(rotz)) {
     return;
   }
 
-  const changeX = Math.abs(rotx - previousRotationX);
-  const changeZ = Math.abs(rotz - previousRotationZ);
-  previousRotationX = rotx;
-  previousRotationZ = rotz;
-
-  if (
-    !dspNode ||
-    audioContext.state !== "running" ||
-    millis() - lastSlap < SLAP_COOLDOWN
-  ) {
-    return;
-  }
-
-  const xCanTrigger =
-    changeX >= ROTATION_THRESHOLD &&
-    Math.abs(rotx) < NEUTRAL_ROTATION_LIMIT;
-  const zCanTrigger =
-    changeZ >= ROTATION_THRESHOLD &&
-    Math.abs(rotz) < NEUTRAL_ROTATION_LIMIT;
-
-  if (!xCanTrigger && !zCanTrigger) return;
-
-  const triggerAngle =
-    xCanTrigger && (!zCanTrigger || changeX >= changeZ) ? rotx : rotz;
-  lastSlap = millis();
-  dspNode.setParamValue(tubeResAddress, Math.abs(triggerAngle) / NEUTRAL_ROTATION_LIMIT);
-  dspNode.setParamValue(motorGateAddress, 1);
-
-  setTimeout(() => {
-    dspNode.setParamValue(motorGateAddress, 0);
-    dspNode.setParamValue(tubeResAddress, 0);
-  }, SLAP_DURATION);
+  const maxSpeed = Math.max(
+    0,
+    Math.min(1, (rotz - rotationZMin) / (rotationZMax - rotationZMin))
+  );
+  dspNode.setParamValue(maxSpeedAddress, maxSpeed);
 }
 
 function mousePressed() {
@@ -121,8 +83,7 @@ function deviceShaken() {
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// X or Z rotation changes trigger a slap only within 20 degrees of neutral.
-// tubeRes follows the triggering axis angle during the slap and resets to zero.
+// Z rotation from 44 to 300 degrees maps maxSpeed from 0 to 1.
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
