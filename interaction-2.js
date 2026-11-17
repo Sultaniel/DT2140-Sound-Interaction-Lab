@@ -8,94 +8,93 @@
 //
 //==========================================================================================
 let dspNode = null;
-const dspName = "smash";
+let dspNodeParams = null;
+let jsonParams = null;
+
+// Change here to ("tuono") depending on your wasm file name
+const dspName = "flare";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 const maxSpeedAddress = "/smash/maxSpeed";
-const motorGateAddress = "/smash/gate";
-const volumeAddress = "/smash/volume";
-const tubeResAddress = "/smash/tubeRes";
-const rotationXMin = 30;
-const rotationXMax = 80;
-const rotationZMin = 60;
-const rotationZMax = 100;
-const activeVolume = 0.5;
-let soundEnabled = false;
+const rotationXMin = 80;
+const rotationXMax = 90;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
-  window[dspName] = instance;
+    window[dspName] = instance;
 } else {
-  const exp = {};
-  exp[dspName] = instance;
-  module.exports = exp;
+    const exp = {};
+    exp[dspName] = instance;
+    module.exports = exp;
 }
 
-smash
-  .createDSP(audioContext, 1024)
-  .then((node) => {
-    dspNode = node;
-    dspNode.connect(audioContext.destination);
-    console.log("params: ", dspNode.getParams());
-    dspNode.setParamValue(motorGateAddress, 0);
-    dspNode.setParamValue(volumeAddress, 0);
-    dspNode.setParamValue(tubeResAddress, 0);
-  })
-  .catch((error) => {
-    console.error("Failed to load the smash DSP:", error);
-  });
+// The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
+flare.createDSP(audioContext, 1024)
+    .then(node => {
+        dspNode = node;
+        dspNode.connect(audioContext.destination);
+        console.log('params: ', dspNode.getParams());
+        const jsonString = dspNode.getJSON();
+        jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
+        dspNodeParams = jsonParams
+        // const exampleMinMaxParam = findByAddress(dspNodeParams, "/thunder/rumble");
+        // // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
+        // const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
+        // console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
+    });
+
 
 //==========================================================================================
 // INTERACTIONS
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// Map X-axis rotation to the engine's maximum speed.
+// Edit the next functions to create interactions
+// Decide which parameters you're using and then use playAudio to play the Audio
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
 
-function accelerationChange(accx, accy, accz) {}
+function accelerationChange(accx, accy, accz) {
+    
+}
 
 function rotationChange(rotx, roty, rotz) {
-  if (!dspNode || audioContext.state !== "running") {
-    return;
-  }
+    if (!dspNode || audioContext.state === 'suspended' || !Number.isFinite(rotx)) {
+        return;
+    }
 
-  const isInAllowedOrientation =
-    Number.isFinite(rotx) &&
-    Number.isFinite(roty) &&
-    Number.isFinite(rotz) &&
-    roty < 0 &&
-    rotz >= rotationZMin &&
-    rotz <= rotationZMax;
-  const maxSpeed = isInAllowedOrientation
-    ? Math.max(0, Math.min(1, (rotx - rotationXMin) / (rotationXMax - rotationXMin)))
-    : 0;
-  dspNode.setParamValue(maxSpeedAddress, maxSpeed);
-
-  if (isInAllowedOrientation !== soundEnabled) {
-    soundEnabled = isInAllowedOrientation;
-    dspNode.setParamValue(volumeAddress, soundEnabled ? activeVolume : 0);
-    dspNode.setParamValue(motorGateAddress, soundEnabled ? 1 : 0);
-  }
+    const maxSpeed = Math.max(
+        0,
+        Math.min(1, (rotationXMax - rotx) / (rotationXMax - rotationXMin))
+    );
+    dspNode.setParamValue(maxSpeedAddress, maxSpeed);
 }
 
 function mousePressed() {
-  // playAudio()
-  // Use this for debugging from the desktop!
+    playAudio(mouseX/windowWidth)
+    // Use this for debugging from the desktop!
 }
 
 function deviceMoved() {
-  movetimer = millis();
-  statusLabels[2].style("color", "pink");
+    movetimer = millis();
+    statusLabels[2].style("color", "pink");
 }
 
 function deviceTurned() {
-  threshVals[1] = turnAxis;
+    threshVals[1] = turnAxis;
 }
 function deviceShaken() {
-  shaketimer = millis();
-  statusLabels[0].style("color", "pink");
+    shaketimer = millis();
+    statusLabels[0].style("color", "pink");
+    playAudio();
+}
+
+function getMinMaxParam(address) {
+    const exampleMinMaxParam = findByAddress(dspNodeParams, address);
+    // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
+    const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
+    console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
+    return [exampleMinValue, exampleMaxValue]
 }
 
 //==========================================================================================
@@ -103,10 +102,21 @@ function deviceShaken() {
 //------------------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------------------
-// X rotation controls maxSpeed only when Y rotation is negative and Z rotation is 60..100.
+// Edit here to define your audio controls 
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
+
+function playAudio(pressure) {
+    if (!dspNode) {
+        return;
+    }
+    if (audioContext.state === 'suspended') {
+        return;
+    }
+    console.log(pressure)
+    dspNode.setParamValue("/brass/blower/pressure", pressure)
+}
 
 //==========================================================================================
 // END
