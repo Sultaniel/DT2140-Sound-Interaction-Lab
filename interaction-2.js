@@ -54,12 +54,12 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-  if (rotx < 80 || rotx > 110) {
+  if (rotx > 0) {
     //dspNode.setParamValue("/smash/gate", 0);
     return;
   }
 
-  maxSpeed = Math.abs(90 - rotx) / 10;
+  maxSpeed = Math.abs(90 - rotx) / 90;
   playAudio(maxSpeed);
 }
 
