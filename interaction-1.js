@@ -41,7 +41,7 @@ djembe
 //==========================================================================================
 
 function accelerationChange(accx, accy, accz) {
-    if(accy < -5) {
+    if(accy < -2) {
         playAudio();
     }
 }
