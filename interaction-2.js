@@ -60,7 +60,7 @@ function rotationChange(rotx, roty, rotz) {
     return;
   }
 
-  maxSpeed = Math.abs(90 - rotx) / 90;
+  maxSpeed = (Math.abs(rotx - 90) / 90 ) * 0.2;
   console.log(maxSpeed);
   playAudio(maxSpeed);
 }
