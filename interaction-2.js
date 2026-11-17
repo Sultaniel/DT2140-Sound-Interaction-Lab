@@ -69,6 +69,8 @@ function rotationChange(rotx, roty, rotz) {
     return;
   // slight increase only: output limited to 0 - 0.3
   dspNode.setParamValue(tubeResAddress, mapRange(rotx, 3, 85, 0, 0.3));
+  dspNode.setParamValue(tubeResAddress, mapRange(rotz, 3, 85, 0, 0.3));
+  
 }
 
 function mousePressed() {
