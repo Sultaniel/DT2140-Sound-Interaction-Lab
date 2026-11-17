@@ -12,11 +12,14 @@ const dspName = "smash";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 const maxSpeedAddress = "/smash/maxSpeed";
 const motorGateAddress = "/smash/gate";
+const volumeAddress = "/smash/volume";
 const tubeResAddress = "/smash/tubeRes";
 const rotationXMin = 30;
 const rotationXMax = 80;
 const rotationZMin = 60;
 const rotationZMax = 100;
+const activeVolume = 0.5;
+let soundEnabled = false;
 
 // output to window or npm package module
 if (typeof module === "undefined") {
@@ -33,7 +36,8 @@ smash
     dspNode = node;
     dspNode.connect(audioContext.destination);
     console.log("params: ", dspNode.getParams());
-    dspNode.setParamValue(motorGateAddress, 1);
+    dspNode.setParamValue(motorGateAddress, 0);
+    dspNode.setParamValue(volumeAddress, 0);
     dspNode.setParamValue(tubeResAddress, 0);
   })
   .catch((error) => {
@@ -68,6 +72,12 @@ function rotationChange(rotx, roty, rotz) {
     ? Math.max(0, Math.min(1, (rotx - rotationXMin) / (rotationXMax - rotationXMin)))
     : 0;
   dspNode.setParamValue(maxSpeedAddress, maxSpeed);
+
+  if (isInAllowedOrientation !== soundEnabled) {
+    soundEnabled = isInAllowedOrientation;
+    dspNode.setParamValue(volumeAddress, soundEnabled ? activeVolume : 0);
+    dspNode.setParamValue(motorGateAddress, soundEnabled ? 1 : 0);
+  }
 }
 
 function mousePressed() {
